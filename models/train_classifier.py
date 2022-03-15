@@ -18,8 +18,10 @@ from sqlalchemy import create_engine
 
 
 def load_data(database_filepath):
+    #this function is to load data from the database
     engine = create_engine('sqlite:///'+database_filepath)
     df = pd.read_sql_table('DisasterResponse', engine)
+    #dividing the dataset into message and other columns, category names as separate for testing
     X = df.message
     y = df[df.columns[4:]]
     category_names = y.columns
@@ -27,11 +29,15 @@ def load_data(database_filepath):
 
 
 def tokenize(text):
+    #identifying urls in the text document using regex
     url_regex = 'http[s]?://(?:[a-zA-Z]|[0-9]|[$-_@.&+]|[!*\(\),]|(?:%[0-9a-fA-F][0-9a-fA-F]))+'
     detected_urls = re.findall(url_regex, text)
+    
+    #replacing the url's in the text with urlplaceholder in the text file
     for url in detected_urls:
         text = text.replace(url, "urlplaceholder")
 
+    #tokenizing words and then lemmatizing them as well
     tokens = word_tokenize(text)
     lemmatizer = WordNetLemmatizer()
 
@@ -44,29 +50,36 @@ def tokenize(text):
 
 
 def build_model():
+    #this function is to build th pipeline model
+    #pipeline contains the vecotrizer, then transformer (Tfidf) and then a classifier (Random forest)
     pipeline = Pipeline([
         ('vect', CountVectorizer(tokenizer=tokenize)),
         ('tfidf',TfidfTransformer()),
         ('clf', MultiOutputClassifier(RandomForestClassifier()))
     ])
     
+    #based on the pipeline model, using the parameters for better fitting
     parameters = {
         'clf__estimator__n_estimators': [10],
         'clf__estimator__min_samples_split': [2],
     }
 
+    #creating an improved model using the parameters
     cv = GridSearchCV(pipeline, param_grid=parameters, n_jobs=4, verbose=2, cv=3)
 
     return cv
 
 
 def evaluate_model(model, X_test, Y_test, category_names):
+    #function to evalute the model
     y_pred = model.predict(X_test)
+    #following creates a classification report creating a report about precision of the model
     class_report = classification_report(Y_test, y_pred, target_names=category_names)
     print(class_report)
 
 
 def save_model(model, model_filepath):
+    #this fuction saves the file as pickle file
     with open(model_filepath, 'wb') as file:
         pickle.dump(model, file)
 
