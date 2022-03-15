@@ -41,13 +41,21 @@ def load_data(messages_filepath, categories_filepath):
 
 
 def clean_data(df):
-    #this function is used to clean the data, mostly if there are any duplicates in the data-set, this drops duplicates from the dataframe
+    '''
+    This method is to clean the dataset in case it contains any duplicate values.
+    While preparing the pipeline, there were major duplicates were found, so to clean the data, duplicates are removed.
+    drop_duplicates() removes any duplicactes in the dataframe
+    '''
     df = df.drop_duplicates()
     return df
 
 
 def save_data(df, database_filename):
-    #this function saves the cleaned data in the 'Disaster Reponse' DB for our ML pipeline
+    '''
+    The function is used to save the cleaned data in the database.
+    create engine connects the database use the sqlite.
+    to_sql() stores the data from df to 'DisasterResponse' db using create_engine function.
+    '''
     engine = create_engine('sqlite:///'+database_filename)
     df.to_sql('DisasterResponse', engine,if_exists = 'replace', index=False)  
 
